@@ -15,7 +15,7 @@ export class AppComponent implements OnInit {
   mouseX = 0;
   mouseY = 0;
 
-  speed = 20; // Velocità di movimento del serpente
+  speed = 50; // Velocità di movimento del serpente
   interval: any; // Variabile per l'intervallo
 
   @HostListener('document:mousemove', ['$event'])
