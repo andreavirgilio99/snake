@@ -16,7 +16,7 @@ export class AppComponent implements OnInit {
   snake: Coordinates[] = [{ x: 0, y: 0 }];
   food: Coordinates[] = [];
 
-  speed = 50; // più è alta più è lento
+  speed = 4; 
   movementInterval: any;
   foodInterval: any;
 
@@ -32,34 +32,37 @@ export class AppComponent implements OnInit {
   }
 
   snakeMovementConfig() {
-    this.movementInterval = setInterval(() => {
-      // Calcola la direzione dalla testa ai nuovi segmenti
-      for (let i = this.snake.length - 1; i >= 1; i--) {
-        const dx = this.snake[i - 1].x - this.snake[i].x;
-        const dy = this.snake[i - 1].y - this.snake[i].y;
-
-        // Imposta una distanza fissa tra i segmenti
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        const targetDistance = 10; // Distanza desiderata tra i segmenti
-
-        if (distance > targetDistance) {
-          const ratio = targetDistance / distance;
-          this.snake[i].x = this.snake[i - 1].x - dx * ratio;
-          this.snake[i].y = this.snake[i - 1].y - dy * ratio;
-        }
-
-        this.checkFoodCollision(this.snake[i]);
-      }
-
+    setInterval(() => {
       // Calcola la direzione dalla testa al mouse
       const dx = this.mouseX - this.snake[0].x;
       const dy = this.mouseY - this.snake[0].y;
 
-      // Aggiungi "smoothing" al movimento della testa
-      this.snake[0].x += dx / (this.speed * 2);
-      this.snake[0].y += dy / (this.speed * 2);
+      // Calcola la distanza totale
+      const distance = Math.sqrt(dx * dx + dy * dy);
 
-      this.checkFoodCollision(this.snake[0]);
+      if (distance > 0) {
+        // Normalizza la direzione per mantenere una velocità costante
+        const ratio = this.speed / distance;
+
+        // Muovi la testa del serpente con velocità costante nella direzione del mouse
+        this.snake[0].x += dx * ratio;
+        this.snake[0].y += dy * ratio;
+
+        // Aggiorna la posizione degli altri segmenti del serpente
+        for (let i = 1; i < this.snake.length; i++) {
+          const dxSegment = this.snake[i - 1].x - this.snake[i].x;
+          const dySegment = this.snake[i - 1].y - this.snake[i].y;
+          const distanceSegment = Math.sqrt(dxSegment * dxSegment + dySegment * dySegment);
+
+          if (distanceSegment > 0) {
+            const ratioSegment = distanceSegment / this.speed;
+            this.snake[i].x += dxSegment / distanceSegment * ratioSegment;
+            this.snake[i].y += dySegment / distanceSegment * ratioSegment;
+          }
+        }
+
+        this.checkFoodCollision(this.snake[0]);
+      }
     }, 16);
   }
 
