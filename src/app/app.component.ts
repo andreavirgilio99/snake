@@ -38,8 +38,15 @@ export class AppComponent implements OnInit {
         const dx = this.snake[i - 1].x - this.snake[i].x;
         const dy = this.snake[i - 1].y - this.snake[i].y;
 
-        this.snake[i].x += dx / this.speed;
-        this.snake[i].y += dy / this.speed;
+        // Imposta una distanza fissa tra i segmenti
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const targetDistance = 10; // Distanza desiderata tra i segmenti
+
+        if (distance > targetDistance) {
+          const ratio = targetDistance / distance;
+          this.snake[i].x = this.snake[i - 1].x - dx * ratio;
+          this.snake[i].y = this.snake[i - 1].y - dy * ratio;
+        }
 
         this.checkFoodCollision(this.snake[i]);
       }
@@ -48,8 +55,9 @@ export class AppComponent implements OnInit {
       const dx = this.mouseX - this.snake[0].x;
       const dy = this.mouseY - this.snake[0].y;
 
-      this.snake[0].x += dx / this.speed;
-      this.snake[0].y += dy / this.speed;
+      // Aggiungi "smoothing" al movimento della testa
+      this.snake[0].x += dx / (this.speed * 2);
+      this.snake[0].y += dy / (this.speed * 2);
 
       this.checkFoodCollision(this.snake[0]);
     }, 16);
