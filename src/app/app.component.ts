@@ -16,9 +16,11 @@ export class AppComponent implements OnInit {
   snake: Coordinates[] = [{ x: 0, y: 0 }];
   food: Coordinates[] = [];
 
-  speed = 4; 
+  speed = 4;
   movementInterval: any;
   foodInterval: any;
+
+  addingSegment = false
 
   @HostListener('document:mousemove', ['$event'])
   mouseEvent(event: MouseEvent) {
@@ -62,6 +64,14 @@ export class AppComponent implements OnInit {
         }
 
         this.checkFoodCollision(this.snake[0]);
+
+        // Verifica la condizione di sconfitta (collisione con altri segmenti)
+        if (this.checkCollisionWithSegments()) {
+          // Condizione di sconfitta, gestisci qui
+          alert('Hai perso! Il tuo punteggio: ' + (this.snake.length - 1));
+          this.resetGame();
+        }
+
       }
     }, 16);
   }
@@ -73,6 +83,31 @@ export class AppComponent implements OnInit {
     const randomY = Math.random() * screenHeight;
 
     return { x: randomX, y: randomY };
+  }
+
+  checkCollisionWithSegments(): boolean {
+    // Verifica se la testa del serpente collide con altri segmenti
+    if (!this.addingSegment) {
+      for (let i = 1; i < this.snake.length; i++) {
+        const segment = this.snake[i];
+        const dx = this.snake[0].x - segment.x;
+        const dy = this.snake[0].y - segment.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+  
+        // Considera una collisione se le coordinate sono vicine
+        if (distance < 10) {
+          return true; // Collisione
+        }
+      }
+    }
+  
+    return false; // Nessuna collisione
+  }
+
+  resetGame() {
+    // Resetta il gioco dopo la sconfitta
+    this.snake = [{ x: 0, y: 0 }];
+    this.food = [];
   }
 
   foodSpawningConfig() {
@@ -88,7 +123,7 @@ export class AppComponent implements OnInit {
         Math.pow(segment.x - food.x, 2) + Math.pow(segment.y - food.y, 2)
       );
 
-      if (distance < 10) {
+      if (distance < 5) {
         this.food.splice(i, 1);
         this.addSnakeSegment();
         break;
@@ -97,8 +132,13 @@ export class AppComponent implements OnInit {
   }
 
   addSnakeSegment() {
+    this.addingSegment = true
     const lastSegment = this.snake[this.snake.length - 1];
     const newSegment: Coordinates = { x: lastSegment.x, y: lastSegment.y };
     this.snake.push(newSegment);
+
+    setTimeout(() => {
+      this.addingSegment = false;
+    }, 100);
   }
 }
