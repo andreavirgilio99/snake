@@ -1,1 +1,2 @@
-<div class="serpente" [style.left.px]="x" [style.top.px]="y"></div>
+<div class="food" *ngFor="let piece of food" [style.left.px]="piece.x" [style.top.px]="piece.y"></div>
+<div class="snake" *ngFor="let segment of snake" [style.left.px]="segment.x" [style.top.px]="segment.y"></div>
