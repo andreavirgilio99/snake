@@ -20,8 +20,6 @@ export class AppComponent implements OnInit {
   movementInterval: any;
   foodInterval: any;
 
-  addingSegment = false
-
   @HostListener('document:mousemove', ['$event'])
   mouseEvent(event: MouseEvent) {
     this.mouseX = event.clientX;
@@ -35,22 +33,17 @@ export class AppComponent implements OnInit {
 
   snakeMovementConfig() {
     setInterval(() => {
-      // Calcola la direzione dalla testa al mouse
       const dx = this.mouseX - this.snake[0].x;
       const dy = this.mouseY - this.snake[0].y;
 
-      // Calcola la distanza totale
       const distance = Math.sqrt(dx * dx + dy * dy);
 
       if (distance > 0) {
-        // Normalizza la direzione per mantenere una velocità costante
         const ratio = this.speed / distance;
 
-        // Muovi la testa del serpente con velocità costante nella direzione del mouse
         this.snake[0].x += dx * ratio;
         this.snake[0].y += dy * ratio;
 
-        // Aggiorna la posizione degli altri segmenti del serpente
         for (let i = 1; i < this.snake.length; i++) {
           const dxSegment = this.snake[i - 1].x - this.snake[i].x;
           const dySegment = this.snake[i - 1].y - this.snake[i].y;
@@ -65,10 +58,8 @@ export class AppComponent implements OnInit {
 
         this.checkFoodCollision(this.snake[0]);
 
-        // Verifica la condizione di sconfitta (collisione con altri segmenti)
         if (this.checkCollisionWithSegments()) {
-          // Condizione di sconfitta, gestisci qui
-          alert('Hai perso! Il tuo punteggio: ' + (this.snake.length - 1));
+          alert('Damn you\'re a loser, here\'s your score: ' + (this.snake.length - 1));
           this.resetGame();
         }
 
@@ -86,26 +77,20 @@ export class AppComponent implements OnInit {
   }
 
   checkCollisionWithSegments(): boolean {
-    // Verifica se la testa del serpente collide con altri segmenti
-    if (!this.addingSegment) {
-      for (let i = 1; i < this.snake.length; i++) {
-        const segment = this.snake[i];
-        const dx = this.snake[0].x - segment.x;
-        const dy = this.snake[0].y - segment.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-  
-        // Considera una collisione se le coordinate sono vicine
-        if (distance < 10) {
-          return true; // Collisione
-        }
+    for (let i = 2; i < this.snake.length; i++) {
+      const segment = this.snake[i];
+      const dx = this.snake[0].x - segment.x;
+      const dy = this.snake[0].y - segment.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance < 5) {
+        return true;
       }
     }
-  
-    return false; // Nessuna collisione
+    return false; 
   }
 
   resetGame() {
-    // Resetta il gioco dopo la sconfitta
     this.snake = [{ x: 0, y: 0 }];
     this.food = [];
   }
@@ -123,7 +108,7 @@ export class AppComponent implements OnInit {
         Math.pow(segment.x - food.x, 2) + Math.pow(segment.y - food.y, 2)
       );
 
-      if (distance < 5) {
+      if (distance < 10) {
         this.food.splice(i, 1);
         this.addSnakeSegment();
         break;
@@ -132,13 +117,8 @@ export class AppComponent implements OnInit {
   }
 
   addSnakeSegment() {
-    this.addingSegment = true
     const lastSegment = this.snake[this.snake.length - 1];
     const newSegment: Coordinates = { x: lastSegment.x, y: lastSegment.y };
     this.snake.push(newSegment);
-
-    setTimeout(() => {
-      this.addingSegment = false;
-    }, 100);
   }
 }
