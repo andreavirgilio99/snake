@@ -35,10 +35,6 @@ export class AppComponent implements OnInit {
   ngOnInit(): void {
     this.snakeMovementConfig();
     this.foodSpawningConfig();
-
-    for(let i = 0; i < 5000; i++){
-      this.food.push(this.getRandomPosition())
-    }
   }
 
   snakeMovementConfig() {
@@ -127,11 +123,29 @@ export class AppComponent implements OnInit {
         Math.pow(segment.x - food.x, 2) + Math.pow(segment.y - food.y, 2)
       );
 
-      if (distance < 10) {
+      if (distance < 15) {
         this.food.splice(i, 1);
         this.snake.speed += 0.5;
         this.addSnakeSegment();
         break;
+      }
+    }
+  }
+
+  checkEnemyCollision(enemy: IEnemy){
+    for(let i = 0; i < enemy.segments.length; i++){
+      for(let i2 = 0; i2 < this.snake.segments.length; i2++){
+        const enemySegment = enemy.segments[i];
+        const snakeSegment = this.snake.segments[i2];
+
+        const distance = Math.sqrt(
+          Math.pow(enemySegment.x - snakeSegment.x, 2) + Math.pow(enemySegment.y - snakeSegment.y, 2)
+        );
+
+        if(distance < 15){
+          this.gameOver();
+          break;
+        }
       }
     }
   }
@@ -190,9 +204,7 @@ export class AppComponent implements OnInit {
           }
         }
 
-        //if (this.checkCollisionWithSegments()) {
-        //  this.gameOver()
-        //}
+        this.checkEnemyCollision(newEnemy)
       }
     }, 16)
 
