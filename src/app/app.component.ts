@@ -1,7 +1,9 @@
 import { Component, HostListener, OnInit } from '@angular/core';
+import { Timer } from './model/timer.type';
+import { IEnemy } from './model/enemy.model';
+import { ISnake } from './model/snake.model';
+import { ICoordinates } from './model/coordinates.model';
 
-type Coordinates = { x: number; y: number };
-type Snake = {segments: Coordinates[], speed: number}
 
 @Component({
   selector: 'app-root',
@@ -14,12 +16,15 @@ export class AppComponent implements OnInit {
   mouseX = 0;
   mouseY = 0;
 
-  snake: Coordinates[] = [{ x: 0, y: 0 }];
-  food: Coordinates[] = [];
+  snake: ISnake = {
+    segments: [{ x: 0, y: 0 }],
+    speed: 4
+  }
 
-  speed = 4;
-  movementInterval: any;
-  foodInterval: any;
+  enemies: IEnemy[] = [];
+
+  food: ICoordinates[] = [];
+  foodInterval!: Timer;
 
   @HostListener('document:mousemove', ['$event'])
   mouseEvent(event: MouseEvent) {
@@ -30,48 +35,51 @@ export class AppComponent implements OnInit {
   ngOnInit(): void {
     this.snakeMovementConfig();
     this.foodSpawningConfig();
+
+    for(let i = 0; i < 5000; i++){
+      this.food.push(this.getRandomPosition())
+    }
   }
 
- snakeMovementConfig() {
-  setInterval(() => {
-    const dx = this.mouseX - this.snake[0].x;
-    const dy = this.mouseY - this.snake[0].y;
+  snakeMovementConfig() {
+    setInterval(() => {
+      const dx = this.mouseX - this.snake.segments[0].x;
+      const dy = this.mouseY - this.snake.segments[0].y;
 
-    const distance = Math.sqrt(dx * dx + dy * dy);
+      const distance = Math.sqrt(dx * dx + dy * dy);
 
-    if (distance > 0) {
-      const ratio = this.speed / distance;
+      if (distance > 0) {
+        const ratio = this.snake.speed / distance;
 
-      this.snake[0].x += dx * ratio;
-      this.snake[0].y += dy * ratio;
+        this.snake.segments[0].x += dx * ratio;
+        this.snake.segments[0].y += dy * ratio;
 
-      const segmentSpacing = 10; // Distanza desiderata tra i segmenti
+        const segmentSpacing = 10; // Distanza desiderata tra i segmenti
 
-      for (let i = 1; i < this.snake.length; i++) {
-        const dxSegment = this.snake[i - 1].x - this.snake[i].x;
-        const dySegment = this.snake[i - 1].y - this.snake[i].y;
-        const distanceSegment = Math.sqrt(dxSegment * dxSegment + dySegment * dySegment);
+        for (let i = 1; i < this.snake.segments.length; i++) {
+          const dxSegment = this.snake.segments[i - 1].x - this.snake.segments[i].x;
+          const dySegment = this.snake.segments[i - 1].y - this.snake.segments[i].y;
+          const distanceSegment = Math.sqrt(dxSegment * dxSegment + dySegment * dySegment);
 
-        if (distanceSegment > 0) {
-          const targetDistance = segmentSpacing + 1; // Distanza target (segmentSpacing + 1 per evitare sovrapposizioni)
-          const ratioSegment = targetDistance / distanceSegment; // Calcolo del rapporto
-          this.snake[i].x = this.snake[i - 1].x - dxSegment * ratioSegment;
-          this.snake[i].y = this.snake[i - 1].y - dySegment * ratioSegment;
+          if (distanceSegment > 0) {
+            const targetDistance = segmentSpacing + 1; // Distanza target (segmentSpacing + 1 per evitare sovrapposizioni)
+            const ratioSegment = targetDistance / distanceSegment; // Calcolo del rapporto
+            this.snake.segments[i].x = this.snake.segments[i - 1].x - dxSegment * ratioSegment;
+            this.snake.segments[i].y = this.snake.segments[i - 1].y - dySegment * ratioSegment;
+          }
         }
+
+        this.checkFoodCollision(this.snake.segments[0]);
+
+        if (this.checkCollisionWithSegments()) {
+          this.gameOver()
+        }
+
       }
+    }, 16);
+  }
 
-      this.checkFoodCollision(this.snake[0]);
-
-      if (this.checkCollisionWithSegments()) {
-        alert('Hai perso! Il tuo punteggio: ' + (this.snake.length - 1));
-        this.resetGame();
-      }
-
-    }
-  }, 16);
-}
-
-  getRandomPosition(): Coordinates {
+  getRandomPosition(): ICoordinates {
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
     const randomX = Math.random() * screenWidth;
@@ -81,23 +89,29 @@ export class AppComponent implements OnInit {
   }
 
   checkCollisionWithSegments(): boolean {
-    for (let i = 2; i < this.snake.length; i++) {
-      const segment = this.snake[i];
-      const dx = this.snake[0].x - segment.x;
-      const dy = this.snake[0].y - segment.y;
+    for (let i = 2; i < this.snake.segments.length; i++) {
+      const segment = this.snake.segments[i];
+      const dx = this.snake.segments[0].x - segment.x;
+      const dy = this.snake.segments[0].y - segment.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
 
       if (distance < 5) {
         return true;
       }
     }
-    return false; 
+    return false;
   }
 
   resetGame() {
-    this.snake = [{ x: 0, y: 0 }];
+    this.snake.segments = [{ x: 0, y: 0 }];
     this.food = [];
-    this.speed = 4;
+    this.snake.speed = 4;
+    
+    this.enemies.forEach(enemy =>{
+      clearInterval(enemy.movementInterval)
+    })
+
+    this.enemies = []
   }
 
   foodSpawningConfig() {
@@ -106,7 +120,7 @@ export class AppComponent implements OnInit {
     }, 5 * 1000);
   }
 
-  checkFoodCollision(segment: Coordinates) {
+  checkFoodCollision(segment: ICoordinates) {
     for (let i = 0; i < this.food.length; i++) {
       const food = this.food[i];
       const distance = Math.sqrt(
@@ -115,7 +129,7 @@ export class AppComponent implements OnInit {
 
       if (distance < 10) {
         this.food.splice(i, 1);
-        this.speed += 0.5;
+        this.snake.speed += 0.5;
         this.addSnakeSegment();
         break;
       }
@@ -123,16 +137,66 @@ export class AppComponent implements OnInit {
   }
 
   addSnakeSegment() {
-    const lastSegment = this.snake[this.snake.length - 1];
-    const newSegment: Coordinates = { x: lastSegment.x, y: lastSegment.y };
-    this.snake.push(newSegment);
+    const lastSegment = this.snake.segments[this.snake.segments.length - 1];
+    const newSegment: ICoordinates = { x: lastSegment.x, y: lastSegment.y };
+    this.snake.segments.push(newSegment);
 
-    if(this.snake.length % 5 == 0){
+    if (this.snake.segments.length % 5 == 0) {
       this.addEnemy()
     }
   }
 
-  addEnemy(){
+  gameOver() {
+    alert('Hai perso! Il tuo punteggio: ' + (this.snake.segments.length - 1));
+    this.resetGame();
+  }
 
+  addEnemy() {
+    const newEnemy: IEnemy = {
+      speed: this.snake.speed -2,
+      segments: [
+        { x: 0, y: 0 },
+        { x: 0, y: 0 },
+        { x: 0, y: 0 },
+        { x: 0, y: 0 },
+        { x: 0, y: 0 }
+      ]
+    }
+
+    const enemyTimer: Timer = setInterval(() => {
+      const dx = this.snake.segments[0].x - newEnemy.segments[0].x;
+      const dy = this.snake.segments[0].y - newEnemy.segments[0].y;
+
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance > 0) {
+        const ratio = newEnemy.speed / distance;
+
+        newEnemy.segments[0].x += dx * ratio;
+        newEnemy.segments[0].y += dy * ratio;
+
+        const segmentSpacing = 10;
+
+        for (let i = 1; i < newEnemy.segments.length; i++) {
+          const dxSegment = newEnemy.segments[i - 1].x - newEnemy.segments[i].x;
+          const dySegment = newEnemy.segments[i - 1].y - newEnemy.segments[i].y;
+          const distanceSegment = Math.sqrt(dxSegment * dxSegment + dySegment * dySegment);
+
+          if (distanceSegment > 0) {
+            const targetDistance = segmentSpacing + 1; 
+            const ratioSegment = targetDistance / distanceSegment;
+            newEnemy.segments[i].x = newEnemy.segments[i - 1].x - dxSegment * ratioSegment;
+            newEnemy.segments[i].y = newEnemy.segments[i - 1].y - dySegment * ratioSegment;
+          }
+        }
+
+        //if (this.checkCollisionWithSegments()) {
+        //  this.gameOver()
+        //}
+      }
+    }, 16)
+
+    newEnemy.movementInterval = enemyTimer;
+    this.enemies.push(newEnemy)
   }
 }

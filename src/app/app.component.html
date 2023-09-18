@@ -1,2 +1,6 @@
 <div class="food" *ngFor="let piece of food" [style.left.px]="piece.x" [style.top.px]="piece.y"></div>
-<div class="snake" *ngFor="let segment of snake" [style.left.px]="segment.x" [style.top.px]="segment.y"></div>
+<div class="snake" *ngFor="let segment of snake.segments" [style.left.px]="segment.x" [style.top.px]="segment.y"></div>
+
+<ng-container *ngFor="let enemy of enemies">
+    <div class="enemy" *ngFor="let segment of enemy.segments" [style.left.px]="segment.x" [style.top.px]="segment.y"></div>
+</ng-container>

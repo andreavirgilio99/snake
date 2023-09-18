@@ -7,6 +7,15 @@
     border-radius: 100%;
 }
 
+.enemy{
+    background-color: red;
+    color: red;
+    min-height: 20px;
+    min-width: 20px;
+    position: absolute;
+    border-radius: 100%;
+}
+
 .food{
     background-color: rgb(68, 94, 224);
     color: rgb(68, 94, 224);
