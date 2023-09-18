@@ -133,19 +133,17 @@ export class AppComponent implements OnInit {
   }
 
   checkEnemyCollision(enemy: IEnemy){
-    for(let i = 0; i < enemy.segments.length; i++){
-      for(let i2 = 0; i2 < this.snake.segments.length; i2++){
-        const enemySegment = enemy.segments[i];
-        const snakeSegment = this.snake.segments[i2];
+    for(let i = 0; i < this.snake.segments.length; i++){
+      const enemySegment = enemy.segments[0];
+      const snakeSegment = this.snake.segments[i];
 
-        const distance = Math.sqrt(
-          Math.pow(enemySegment.x - snakeSegment.x, 2) + Math.pow(enemySegment.y - snakeSegment.y, 2)
-        );
+      const distance = Math.sqrt(
+        Math.pow(enemySegment.x - snakeSegment.x, 2) + Math.pow(enemySegment.y - snakeSegment.y, 2)
+      );
 
-        if(distance < 15){
-          this.gameOver();
-          break;
-        }
+      if(distance < 15){
+        this.gameOver();
+        break;
       }
     }
   }
@@ -167,7 +165,7 @@ export class AppComponent implements OnInit {
 
   addEnemy() {
     const newEnemy: IEnemy = {
-      speed: this.snake.speed -2,
+      speed: this.snake.speed -3,
       segments: [
         { x: 0, y: 0 },
         { x: 0, y: 0 },
